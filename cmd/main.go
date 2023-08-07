@@ -1,19 +1,18 @@
 package main
 
 import (
-	"fmt"
 	"github.com/khussa1n/todo-list/internal/app"
 	"github.com/khussa1n/todo-list/internal/config"
 )
 
 func main() {
+	// Инициализация кофигурации
 	cfg, err := config.InitConfig("config.yaml")
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println(fmt.Sprintf("%#v", cfg))
-
+	// Запуск
 	err = app.Run(cfg)
 	if err != nil {
 		panic(err)

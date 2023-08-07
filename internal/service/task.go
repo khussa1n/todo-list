@@ -13,8 +13,8 @@ func (m *Manager) UpdateTask(ctx context.Context, e *entity.Tasks) error {
 	return nil
 }
 
-func (m *Manager) GetAllTasks(ctx context.Context, status string) error {
-	return nil
+func (m *Manager) GetAllTasks(ctx context.Context, status string) (*entity.Tasks, error) {
+	return nil, nil
 }
 
 func (m *Manager) DeleteTask(ctx context.Context, id int64) error {

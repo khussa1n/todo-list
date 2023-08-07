@@ -8,7 +8,7 @@ import (
 type TodoList interface {
 	CreateTask(ctx context.Context, e *entity.Tasks) error
 	UpdateTask(ctx context.Context, e *entity.Tasks) error
-	GetAllTasks(ctx context.Context, status string) error
+	GetAllTasks(ctx context.Context, status string) (*entity.Tasks, error)
 	DeleteTask(ctx context.Context, id int64) error
 }
 

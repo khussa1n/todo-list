@@ -13,6 +13,7 @@ import (
 )
 
 func Run(cfg *config.Config) error {
+	// Соеденение с базой
 	conn, err := mongodb.New(
 		mongodb.WithHost(cfg.DB.Host),
 		mongodb.WithPort(cfg.DB.Port),
@@ -21,15 +22,18 @@ func Run(cfg *config.Config) error {
 		mongodb.WithPassword(cfg.DB.Password),
 	)
 	if err != nil {
-		log.Printf("connection to DB err: %s", err.Error())
+		log.Printf("connection to mongodb err: %s", err.Error())
 		return err
 	}
 	log.Println("connection success")
 
+	// Получение репозитория <Repository interface> и базы mongodb <MongoDB struct>
 	db := mongorepo.New(conn)
-
+	// Получение сервиса
 	srvs := service.New(db, cfg)
+	// Получение контроллера
 	hndlr := handler.New(srvs)
+	// Создание http сервера
 	server := httpserver.New(
 		hndlr.InitRouter(),
 		httpserver.WithPort(cfg.HTTP.Port),
@@ -38,12 +42,15 @@ func Run(cfg *config.Config) error {
 		httpserver.WithShutdownTimeout(cfg.HTTP.ShutdownTimeout),
 	)
 
-	log.Println("server started")
+	// Запуск http сервера
 	server.Start()
+	log.Println("server started")
 
+	// Создание канала для сигналов
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
+	// Ожидание сигналов от операционной системы и ошибки от http сервера
 	select {
 	case s := <-interrupt:
 		log.Printf("signal received: %s", s.String())
@@ -51,6 +58,7 @@ func Run(cfg *config.Config) error {
 		log.Printf("server notify: %s", err.Error())
 	}
 
+	// Принудительное остановление сервера
 	err = server.Shutdown()
 	if err != nil {
 		log.Printf("server shutdown err: %s", err)

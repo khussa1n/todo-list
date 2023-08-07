@@ -13,8 +13,8 @@ func (m *MongoDB) UpdateTask(ctx context.Context, e *entity.Tasks) error {
 	return nil
 }
 
-func (m *MongoDB) GetAllTasks(ctx context.Context, status string) error {
-	return nil
+func (m *MongoDB) GetAllTasks(ctx context.Context, status string) (*entity.Tasks, error) {
+	return nil, nil
 }
 
 func (m *MongoDB) DeleteTask(ctx context.Context, id int64) error {

@@ -17,20 +17,19 @@ type Mongo struct {
 	db       *mongo.Database
 }
 
-func New(DBopts ...Option) (*mongo.Database, error) {
+func New(cfgOpts ...Option) (*mongo.Database, error) {
 	m := new(Mongo)
 
-	for _, opt := range DBopts {
+	for _, opt := range cfgOpts {
 		opt(m)
 	}
 
-	uri := fmt.Sprintf("mongodb://%s:%s@%s:%s", m.username, m.password, m.host, m.port)
+	url := fmt.Sprintf("mongodb://%s:%s@%s:%s", m.username, m.password, m.host, m.port)
 
-	// Use the SetServerAPIOptions() method to set the Stable API version to 1
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
-	opts := options.Client().ApplyURI(uri).SetServerAPIOptions(serverAPI)
+	opts := options.Client().ApplyURI(url).SetServerAPIOptions(serverAPI)
 
-	// Create a new client and connect to the server
+	// Создание нового клиент и подключение к db
 	client, err := mongo.Connect(context.TODO(), opts)
 	if err != nil {
 		return nil, fmt.Errorf("mongoDB connect err: %w", err)
@@ -42,7 +41,7 @@ func New(DBopts ...Option) (*mongo.Database, error) {
 		}
 	}()
 
-	// Send a ping to confirm a successful connection
+	// ping-запрос для подтверждения успешного подключения
 	var result bson.M
 	if err = client.Database(m.dbName).RunCommand(context.TODO(), bson.D{{"ping", 1}}).Decode(&result); err != nil {
 		return nil, fmt.Errorf("mongoDB Send a ping err: %e", err)

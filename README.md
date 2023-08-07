@@ -1,1 +1,7 @@
-# Todo List
+## Todo List
+
+### Getting started
+
+```
+make run
+```
