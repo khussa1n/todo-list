@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  mongodb:
+    restart: always
+    image: mongo:latest
+    volumes:
+      - ./data/dev/mongo:/data/db
+    environment:
+      - MONGODB_DATABASE=todo
+      - MONGO_INITDB_ROOT_USERNAME=mongo
+      - MONGO_INITDB_ROOT_PASSWORD=mongo
+    ports:
+      - 27018:27017
+
+  app:
+    build: ./
+    command: sh -c "/wait && /app/main"
+    ports:
+      - 8080:8080
+    depends_on:
+      - mongodb
