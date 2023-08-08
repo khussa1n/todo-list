@@ -5,7 +5,7 @@ services:
     restart: always
     image: mongo:latest
     volumes:
-      - ./data/dev/mongo:/data/db
+      - ./.data/dev/mongo:/data/db
     environment:
       - MONGODB_DATABASE=todo
       - MONGO_INITDB_ROOT_USERNAME=mongo

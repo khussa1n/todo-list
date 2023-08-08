@@ -14,7 +14,6 @@ type Mongo struct {
 	password string
 	port     string
 	dbName   string
-	db       *mongo.Database
 }
 
 func New(cfgOpts ...Option) (*mongo.Database, error) {
@@ -34,12 +33,6 @@ func New(cfgOpts ...Option) (*mongo.Database, error) {
 	if err != nil {
 		return nil, fmt.Errorf("mongoDB connect err: %w", err)
 	}
-
-	defer func() {
-		if err = client.Disconnect(context.TODO()); err != nil {
-			panic(err)
-		}
-	}()
 
 	// ping-запрос для подтверждения успешного подключения
 	var result bson.M

@@ -19,11 +19,12 @@ type ServerConfig struct {
 }
 
 type DBConfig struct {
-	Host     string `yaml:"host"`
-	Port     string `yaml:"port"`
-	DBName   string `yaml:"db_name"`
-	Username string `yaml:"username"`
-	Password string `yaml:"password"`
+	Host       string `yaml:"host"`
+	Port       string `yaml:"port"`
+	DBName     string `yaml:"db_name"`
+	Username   string `yaml:"username"`
+	Password   string `yaml:"password"`
+	Collection string `yaml:"collection"`
 }
 
 func InitConfig(path string) (*Config, error) {

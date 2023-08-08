@@ -7,11 +7,11 @@ import (
 const tasksTable = "tasks"
 
 type MongoDB struct {
-	DB *mongo.Database
+	collection *mongo.Collection
 }
 
-func New(db *mongo.Database) *MongoDB {
+func New(db *mongo.Database, collection string) *MongoDB {
 	return &MongoDB{
-		DB: db,
+		collection: db.Collection(collection),
 	}
 }

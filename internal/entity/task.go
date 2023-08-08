@@ -1,10 +1,8 @@
 package entity
 
-import "time"
-
 type Tasks struct {
-	ID       int64     `json:"id" db:"id"`
-	title    string    `json:"title" db:"title" binding:"required"`
-	activeAt time.Time `json:"activeAt" db:"active_at" binding:"required"`
-	status   string    `json:"status" db:"status"`
+	ID       string `json:"id" bson:"_id,omitempty"`
+	Title    string `json:"title" bson:"title"`
+	ActiveAt string `json:"activeAt" bson:"activeAt"`
+	Status   string `json:"status" bson:"status"`
 }

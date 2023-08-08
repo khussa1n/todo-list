@@ -28,7 +28,7 @@ func Run(cfg *config.Config) error {
 	log.Println("connection success")
 
 	// Получение репозитория <Repository interface> и базы mongodb <MongoDB struct>
-	db := mongorepo.New(conn)
+	db := mongorepo.New(conn, cfg.DB.Collection)
 	// Получение сервиса
 	srvs := service.New(db, cfg)
 	// Получение контроллера
