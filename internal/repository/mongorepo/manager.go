@@ -5,8 +5,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-const tasksTable = "tasks"
-
 type MongoDB struct {
 	taskCollection *mongo.Collection
 }

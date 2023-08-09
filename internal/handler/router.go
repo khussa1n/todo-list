@@ -19,7 +19,7 @@ func (h *Handler) InitRouter() *gin.Engine {
 	task.PUT("/:id", h.updateTask)
 	task.DELETE("/:id", h.deleteTask)
 	task.PUT("/:id/done", h.updateTaskStatus)
-	task.GET("", h.getAllTasks)
+	task.GET("/", h.getAllTasks)
 
 	return router
 }
