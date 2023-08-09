@@ -18,13 +18,17 @@ type ServerConfig struct {
 	WriteTimeout    time.Duration `yaml:"write_timeout"`
 }
 
+type Collections struct {
+	Task string `yaml:"task"`
+}
+
 type DBConfig struct {
-	Host       string `yaml:"host"`
-	Port       string `yaml:"port"`
-	DBName     string `yaml:"db_name"`
-	Username   string `yaml:"username"`
-	Password   string `yaml:"password"`
-	Collection string `yaml:"collection"`
+	Host        string      `yaml:"host"`
+	Port        string      `yaml:"port"`
+	DBName      string      `yaml:"db_name"`
+	Username    string      `yaml:"username"`
+	Password    string      `yaml:"password"`
+	Collections Collections `yaml:"collections"`
 }
 
 func InitConfig(path string) (*Config, error) {

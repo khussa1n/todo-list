@@ -1,17 +1,18 @@
 package mongorepo
 
 import (
+	"github.com/khussa1n/todo-list/internal/config"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 const tasksTable = "tasks"
 
 type MongoDB struct {
-	collection *mongo.Collection
+	taskCollection *mongo.Collection
 }
 
-func New(db *mongo.Database, collection string) *MongoDB {
+func New(db *mongo.Database, collections config.Collections) *MongoDB {
 	return &MongoDB{
-		collection: db.Collection(collection),
+		taskCollection: db.Collection(collections.Task),
 	}
 }

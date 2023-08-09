@@ -11,4 +11,5 @@ db:
   db_name: 'admin'
   username: 'root'
   password: 'qwerty'
-  collection: 'tasks'
+  collections:
+    task: 'tasks'
