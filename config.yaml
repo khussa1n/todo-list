@@ -6,10 +6,10 @@ http:
   write_timeout: '60s'
 
 db:
-  host: 'localhost'
-  port: '27019'
-  db_name: 'admin'
-  username: 'root'
-  password: 'qwerty'
+  host: 'mongodb'
+  port: '27017'
+  db_name: 'todo'
+  username: 'mongo'
+  password: 'mongo'
   collections:
     task: 'tasks'
