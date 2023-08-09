@@ -3,7 +3,7 @@
 ### Getting started
 
 ```
-make run
+make up
 ```
 
 ### Swagger Documantaion

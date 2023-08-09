@@ -1,7 +1,7 @@
-build:
-	docker-compose build app
-
 run:
+	go run cmd/main.go
+
+up:
 	docker-compose up --build app
 
 test:
