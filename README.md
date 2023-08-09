@@ -1,5 +1,7 @@
 ## Todo List
 
+By Khussain Kudaibergenov | Хусаин Кудайбергенов
+
 ### Getting started
 
 ```
