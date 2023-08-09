@@ -1,0 +1,168 @@
+basePath: /api/todo-list
+definitions:
+  dto.Error:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+    type: object
+  dto.TasksDTO:
+    properties:
+      activeAt:
+        type: string
+      title:
+        type: string
+    required:
+    - activeAt
+    - title
+    type: object
+  entity.Tasks:
+    properties:
+      activeAt:
+        type: string
+      id:
+        type: string
+      status:
+        type: string
+      title:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: khussain.qudaibergenov@gmail.com
+    name: Khussain
+  description: API for Todo application.
+  title: Todo List
+  version: 0.0.1
+paths:
+  /tasks:
+    get:
+      description: Get all tasks by status
+      parameters:
+      - description: name search by status
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.Tasks'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.Error'
+      summary: Get all tasks by status
+      tags:
+      - task
+    post:
+      consumes:
+      - application/json
+      description: Create new task
+      parameters:
+      - description: req body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.TasksDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/entity.Tasks'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.Error'
+      summary: Create task
+      tags:
+      - task
+  /tasks/{id}:
+    delete:
+      description: Delete task
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.Error'
+      summary: Delete task
+      tags:
+      - task
+    put:
+      consumes:
+      - application/json
+      description: Update task
+      parameters:
+      - description: req body
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/dto.TasksDTO'
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.Error'
+      summary: Update task
+      tags:
+      - task
+  /tasks/{id}/done:
+    put:
+      description: Update task status to done
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.Error'
+      summary: Update task status to done
+      tags:
+      - task
+swagger: "2.0"

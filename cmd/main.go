@@ -5,6 +5,15 @@ import (
 	"github.com/khussa1n/todo-list/internal/config"
 )
 
+// @title           Todo List
+// @version         0.0.1
+// @description     API for Todo application.
+
+// @contact.name   Khussain
+// @contact.email  khussain.qudaibergenov@gmail.com
+
+// @host      localhost:8080
+// @BasePath  /api/todo-list
 func main() {
 	// Инициализация кофигурации
 	cfg, err := config.InitConfig("config.yaml")
