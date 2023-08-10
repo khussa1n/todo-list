@@ -39,6 +39,19 @@ func (m *MongoDB) CreateTask(ctx context.Context, t *entity.Tasks) (*entity.Task
 }
 
 func (m *MongoDB) UpdateTask(ctx context.Context, t *entity.Tasks, id primitive.ObjectID) error {
+	existingTaskFilter := bson.M{
+		"title": t.Title,
+	}
+
+	existingTaskCount, err := m.taskCollection.CountDocuments(ctx, existingTaskFilter)
+	if err != nil {
+		return fmt.Errorf("failed to check task uniqueness: %v", err)
+	}
+
+	if existingTaskCount > 0 {
+		return custom_error.ErrDuplicateTask
+	}
+
 	filter := bson.M{"_id": id}
 
 	taskBytes, err := bson.Marshal(t)
