@@ -47,13 +47,34 @@ func (m *Manager) CreateTask(ctx context.Context, t *dto.TasksDTO) (*entity.Task
 }
 
 func (m *Manager) UpdateTask(ctx context.Context, t *dto.TasksDTO, id primitive.ObjectID) error {
+	if len(t.Title) > 200 {
+		return custom_error.ErrMessageTooLong
+	}
+
+	layout := "2006-01-02"
+	parsedDate, err := time.Parse(layout, t.ActiveAt)
+	if err != nil {
+		log.Println("activeAt format err: ", err)
+		return custom_error.ErrInvalidActiveAtFormat
+	}
+
+	weekday := parsedDate.Weekday()
+
+	var title string
+	if weekday == time.Saturday || weekday == time.Sunday {
+		title = "ВЫХОДНОЙ - "
+		title += t.Title
+	} else {
+		title += t.Title
+	}
+
 	task, err := m.Repository.GetTaskByID(ctx, id)
 	if err != nil {
 		return err
 	}
 
 	newTask := &entity.Tasks{
-		Title:    t.Title,
+		Title:    title,
 		ActiveAt: t.ActiveAt,
 		Status:   task.Status,
 	}

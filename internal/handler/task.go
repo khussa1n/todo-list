@@ -25,7 +25,7 @@ func (h *Handler) createTask(ctx *gin.Context) {
 	err := ctx.ShouldBindJSON(&req)
 	if err != nil {
 		log.Printf("bind json err: %s \n", err.Error())
-		ctx.JSON(http.StatusBadRequest, err.Error())
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -34,10 +34,10 @@ func (h *Handler) createTask(ctx *gin.Context) {
 		log.Printf("can not create task: %s \n", err.Error())
 		switch err {
 		case custom_error.ErrMessageTooLong, custom_error.ErrInvalidActiveAtFormat, custom_error.ErrDuplicateTask:
-			ctx.JSON(http.StatusBadRequest, err.Error())
+			ctx.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
 			return
 		default:
-			ctx.JSON(http.StatusInternalServerError, err.Error())
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, err.Error())
 			return
 		}
 	}
@@ -58,7 +58,7 @@ func (h *Handler) createTask(ctx *gin.Context) {
 func (h *Handler) updateTask(ctx *gin.Context) {
 	id, err := parseIdFromPath(ctx, "id")
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, "invalid id param")
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -66,7 +66,7 @@ func (h *Handler) updateTask(ctx *gin.Context) {
 	err = ctx.ShouldBindJSON(&req)
 	if err != nil {
 		log.Printf("bind json err: %s \n", err.Error())
-		ctx.JSON(http.StatusBadRequest, err.Error())
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -75,10 +75,13 @@ func (h *Handler) updateTask(ctx *gin.Context) {
 		log.Printf("can not update task: %s \n", err.Error())
 		switch err {
 		case custom_error.ErrTaskNotFound, custom_error.ErrInvalidActiveAtFormat, custom_error.ErrDuplicateTask:
-			ctx.JSON(http.StatusBadRequest, err.Error())
+			ctx.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
+			return
+		case custom_error.ErrMessageTooLong:
+			ctx.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
 			return
 		default:
-			ctx.JSON(http.StatusInternalServerError, err.Error())
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, err.Error())
 			return
 		}
 	}
@@ -98,7 +101,7 @@ func (h *Handler) updateTask(ctx *gin.Context) {
 func (h *Handler) updateTaskStatus(ctx *gin.Context) {
 	id, err := parseIdFromPath(ctx, "id")
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, "invalid id param")
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -107,10 +110,10 @@ func (h *Handler) updateTaskStatus(ctx *gin.Context) {
 		log.Printf("can not update status task: %s \n", err.Error())
 		switch err {
 		case mongo.ErrNoDocuments:
-			ctx.JSON(http.StatusBadRequest, err.Error())
+			ctx.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
 			return
 		default:
-			ctx.JSON(http.StatusInternalServerError, err.Error())
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, err.Error())
 			return
 		}
 	}
@@ -130,7 +133,7 @@ func (h *Handler) updateTaskStatus(ctx *gin.Context) {
 func (h *Handler) deleteTask(ctx *gin.Context) {
 	id, err := parseIdFromPath(ctx, "id")
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, "invalid id param")
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -139,10 +142,10 @@ func (h *Handler) deleteTask(ctx *gin.Context) {
 		log.Printf("can not delete task: %s \n", err.Error())
 		switch err {
 		case custom_error.ErrTaskNotFound:
-			ctx.JSON(http.StatusBadRequest, err.Error())
+			ctx.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
 			return
 		default:
-			ctx.JSON(http.StatusInternalServerError, err.Error())
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, err.Error())
 			return
 		}
 	}
@@ -166,7 +169,7 @@ func (h *Handler) getAllTasks(ctx *gin.Context) {
 	tasks, err := h.srvs.GetAllTasks(ctx, status)
 	if err != nil {
 		log.Printf("can not get task: %s \n", err.Error())
-		ctx.JSON(http.StatusInternalServerError, err.Error())
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, err.Error())
 		return
 	}
 
