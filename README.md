@@ -7,6 +7,16 @@ By Khussain Kudaibergenov | Хусаин Кудайбергенов
 ```
 make up
 ```
+### Unit tests
+
+```
+make test
+```
+### Integration tests
+
+```
+make test.integration.with.dockerDB
+```
 
 ### Swagger Documantaion
 
