@@ -5,14 +5,10 @@ test:
 	go test --short -coverprofile=tests/coverage.out ./...
 	make test.coverage
 
-test.integration.with.dockerDB:
+test.integration:
 	docker run --rm -d -p 27018:27017 --name test -e MONGODB_DATABASE=test mongo:latest
 	go test ./tests/
-	dockr stop test
-	#dockr rm test
-
-test.integration.with.existing.dockerDB:
-	go test  ./tests/
+	docker stop test
 
 test.coverage:
 	go tool cover -html=tests/coverage.out

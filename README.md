@@ -15,7 +15,7 @@ make test
 ### Integration tests
 
 ```
-make test.integration.with.dockerDB
+make test.integration
 ```
 
 ### Swagger Documantaion
