@@ -79,8 +79,6 @@ func (s *APITestSuite) TestUpdateTask() {
 func (s *APITestSuite) TestUpdateTaskStatus() {
 	router := s.handler.InitRouter()
 
-	//var buf bytes.Buffer
-
 	recorder := httptest.NewRecorder()
 
 	url := fmt.Sprintf("/api/todo-list/tasks/" + task.ID.Hex() + "/done")
