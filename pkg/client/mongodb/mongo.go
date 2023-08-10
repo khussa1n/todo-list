@@ -25,6 +25,10 @@ func New(cfgOpts ...Option) (*mongo.Database, error) {
 
 	url := fmt.Sprintf("mongodb://%s:%s@%s:%s", m.username, m.password, m.host, m.port)
 
+	if m.username == "" && m.password == "" {
+		url = fmt.Sprintf("mongodb://%s:%s", m.host, m.port+"/?authSource=admin")
+	}
+
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
 	opts := options.Client().ApplyURI(url).SetServerAPIOptions(serverAPI)
 

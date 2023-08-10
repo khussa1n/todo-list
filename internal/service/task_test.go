@@ -8,6 +8,7 @@ import (
 	"github.com/khussa1n/todo-list/internal/entity/dto"
 	mock_repository "github.com/khussa1n/todo-list/internal/repository/mock"
 	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"testing"
 )
 
@@ -22,23 +23,25 @@ func Test_CreateTask(t *testing.T) {
 
 	ctx := context.Background()
 
+	id := primitive.NewObjectID()
+
 	table := []struct {
 		dto          dto.TasksDTO
 		taskRepo     entity.Tasks
-		expectedRepo string
+		expectedRepo entity.Tasks
 		expectedSrvc entity.Tasks
 	}{
 		{
 			dto:          dto.TasksDTO{Title: "Купить", ActiveAt: "2023-08-05"},
-			taskRepo:     entity.Tasks{ID: "", Title: "ВЫХОДНОЙ - Купить", ActiveAt: "2023-08-05", Status: "active"},
-			expectedRepo: "1",
-			expectedSrvc: entity.Tasks{ID: "1", Title: "ВЫХОДНОЙ - Купить", ActiveAt: "2023-08-05", Status: "active"},
+			taskRepo:     entity.Tasks{Title: "ВЫХОДНОЙ - Купить", ActiveAt: "2023-08-05", Status: "active"},
+			expectedRepo: entity.Tasks{ID: id, Title: "ВЫХОДНОЙ - Купить", ActiveAt: "2023-08-05", Status: "active"},
+			expectedSrvc: entity.Tasks{ID: id, Title: "ВЫХОДНОЙ - Купить", ActiveAt: "2023-08-05", Status: "active"},
 		},
 		{
 			dto:          dto.TasksDTO{Title: "Купить", ActiveAt: "2023-08-04"},
-			taskRepo:     entity.Tasks{ID: "", Title: "Купить", ActiveAt: "2023-08-04", Status: "active"},
-			expectedRepo: "1",
-			expectedSrvc: entity.Tasks{ID: "1", Title: "Купить", ActiveAt: "2023-08-04", Status: "active"},
+			taskRepo:     entity.Tasks{Title: "Купить", ActiveAt: "2023-08-04", Status: "active"},
+			expectedRepo: entity.Tasks{ID: id, Title: "Купить", ActiveAt: "2023-08-04", Status: "active"},
+			expectedSrvc: entity.Tasks{ID: id, Title: "Купить", ActiveAt: "2023-08-04", Status: "active"},
 		},
 	}
 
@@ -60,7 +63,7 @@ func Test_CreateTask(t *testing.T) {
 	}
 
 	for _, testCase := range table {
-		mockRepo.EXPECT().CreateTask(ctx, &testCase.taskRepo).Return(testCase.expectedRepo, nil).Times(1)
+		mockRepo.EXPECT().CreateTask(ctx, &testCase.taskRepo).Return(&testCase.expectedRepo, nil).Times(1)
 
 		service := New(mockRepo, cfg)
 
@@ -97,25 +100,29 @@ func Test_UpdateTask(t *testing.T) {
 
 	ctx := context.Background()
 
+	id := primitive.NewObjectID()
+
 	table := []struct {
-		dto          dto.TasksDTO
-		taskRepo     string
-		expectedRepo entity.Tasks
+		dto           dto.TasksDTO
+		taskRepo      primitive.ObjectID
+		expectedRepo  entity.Tasks
+		expectedRepo2 entity.Tasks
 	}{
 		{
-			dto:          dto.TasksDTO{Title: "Купить", ActiveAt: "2023-08-05"},
-			taskRepo:     "1",
-			expectedRepo: entity.Tasks{ID: "1", Title: "Купить", ActiveAt: "2023-08-05", Status: "active"},
+			dto:           dto.TasksDTO{Title: "Купить", ActiveAt: "2023-08-05"},
+			taskRepo:      id,
+			expectedRepo:  entity.Tasks{ID: id, Title: "Купить", ActiveAt: "2023-08-05", Status: "active"},
+			expectedRepo2: entity.Tasks{Title: "Купить", ActiveAt: "2023-08-05", Status: "active"},
 		},
 	}
 
 	for _, testCase := range table {
 		mockRepo.EXPECT().GetTaskByID(ctx, testCase.taskRepo).Return(&testCase.expectedRepo, nil).Times(1)
-		mockRepo.EXPECT().UpdateTask(ctx, &testCase.expectedRepo).Return(nil).Times(1)
+		mockRepo.EXPECT().UpdateTask(ctx, &testCase.expectedRepo2, testCase.taskRepo).Return(nil).Times(1)
 
 		service := New(mockRepo, cfg)
 
-		err = service.UpdateTask(ctx, &testCase.dto, testCase.taskRepo)
+		err = service.UpdateTask(ctx, &testCase.dto, testCase.expectedRepo.ID)
 		require.NoError(t, err)
 	}
 }
@@ -132,11 +139,11 @@ func Test_UpdateTaskStatus(t *testing.T) {
 	ctx := context.Background()
 
 	table := []struct {
-		id     string
+		id     primitive.ObjectID
 		status string
 	}{
 		{
-			id:     "1",
+			id:     primitive.NewObjectID(),
 			status: "done",
 		},
 	}
@@ -168,7 +175,7 @@ func Test_GetAllTasks(t *testing.T) {
 	}{
 		{
 			status:       "active",
-			expectedRepo: []entity.Tasks{{ID: "1", Title: "Купить", ActiveAt: "2023-08-05", Status: "active"}},
+			expectedRepo: []entity.Tasks{{ID: primitive.NewObjectID(), Title: "Купить", ActiveAt: "2023-08-05", Status: "active"}},
 		},
 	}
 
@@ -199,10 +206,10 @@ func Test_DeleteTask(t *testing.T) {
 	ctx := context.Background()
 
 	table := []struct {
-		id string
+		id primitive.ObjectID
 	}{
 		{
-			id: "1",
+			id: primitive.NewObjectID(),
 		},
 	}
 

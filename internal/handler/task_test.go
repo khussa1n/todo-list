@@ -9,6 +9,7 @@ import (
 	"github.com/khussa1n/todo-list/internal/entity/dto"
 	mock_service "github.com/khussa1n/todo-list/internal/service/mock"
 	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -31,12 +32,12 @@ func Test_createTask(t *testing.T) {
 	}{
 		{
 			dto:          dto.TasksDTO{Title: "Купить", ActiveAt: "2023-08-05"},
-			expectedSrvc: entity.Tasks{ID: "1", Title: "ВЫХОДНОЙ - Купить", ActiveAt: "2023-08-05", Status: "active"},
+			expectedSrvc: entity.Tasks{ID: primitive.NewObjectID(), Title: "ВЫХОДНОЙ - Купить", ActiveAt: "2023-08-05", Status: "active"},
 			httpStatus:   http.StatusCreated,
 		},
 		{
 			dto:          dto.TasksDTO{Title: "Купить", ActiveAt: "2023-08-04"},
-			expectedSrvc: entity.Tasks{ID: "1", Title: "Купить", ActiveAt: "2023-08-04", Status: "active"},
+			expectedSrvc: entity.Tasks{ID: primitive.NewObjectID(), Title: "Купить", ActiveAt: "2023-08-04", Status: "active"},
 			httpStatus:   http.StatusCreated,
 		},
 	}
@@ -70,12 +71,12 @@ func Test_updateTask(t *testing.T) {
 
 	table := []struct {
 		dto        dto.TasksDTO
-		id         string
+		id         primitive.ObjectID
 		httpStatus int
 	}{
 		{
 			dto:        dto.TasksDTO{Title: "Купить", ActiveAt: "2023-08-05"},
-			id:         "1",
+			id:         primitive.NewObjectID(),
 			httpStatus: http.StatusNoContent,
 		},
 	}
@@ -87,7 +88,7 @@ func Test_updateTask(t *testing.T) {
 
 		mockService.EXPECT().UpdateTask(gomock.Any(), &testCase.dto, testCase.id).Return(nil).Times(1)
 
-		url := fmt.Sprintf("/api/todo-list/tasks/" + testCase.id)
+		url := fmt.Sprintf("/api/todo-list/tasks/" + testCase.id.Hex())
 		request, err := http.NewRequest(http.MethodPut, url, &buf)
 		require.NoError(t, err)
 
@@ -109,12 +110,12 @@ func Test_updateTaskStatus(t *testing.T) {
 
 	table := []struct {
 		status     string
-		id         string
+		id         primitive.ObjectID
 		httpStatus int
 	}{
 		{
 			status:     "done",
-			id:         "1",
+			id:         primitive.NewObjectID(),
 			httpStatus: http.StatusNoContent,
 		},
 	}
@@ -124,7 +125,7 @@ func Test_updateTaskStatus(t *testing.T) {
 
 		mockService.EXPECT().UpdateTaskStatus(gomock.Any(), testCase.id, testCase.status).Return(nil).Times(1)
 
-		url := fmt.Sprintf("/api/todo-list/tasks/" + testCase.id + "/" + testCase.status)
+		url := fmt.Sprintf("/api/todo-list/tasks/" + testCase.id.Hex() + "/" + testCase.status)
 		request, err := http.NewRequest(http.MethodPut, url, &buf)
 		require.NoError(t, err)
 
@@ -145,11 +146,11 @@ func Test_deleteTask(t *testing.T) {
 	recorder := httptest.NewRecorder()
 
 	table := []struct {
-		id         string
+		id         primitive.ObjectID
 		httpStatus int
 	}{
 		{
-			id:         "1",
+			id:         primitive.NewObjectID(),
 			httpStatus: http.StatusNoContent,
 		},
 	}
@@ -159,7 +160,7 @@ func Test_deleteTask(t *testing.T) {
 
 		mockService.EXPECT().DeleteTask(gomock.Any(), testCase.id).Return(nil).Times(1)
 
-		url := fmt.Sprintf("/api/todo-list/tasks/" + testCase.id)
+		url := fmt.Sprintf("/api/todo-list/tasks/" + testCase.id.Hex())
 		request, err := http.NewRequest(http.MethodDelete, url, &buf)
 		require.NoError(t, err)
 
@@ -185,7 +186,7 @@ func Test_getAllTasks(t *testing.T) {
 		httpStatus      int
 	}{
 		{
-			expectedService: []entity.Tasks{{ID: "1", Title: "Купить", ActiveAt: "2023-08-05", Status: "active"}},
+			expectedService: []entity.Tasks{{ID: primitive.NewObjectID(), Title: "Купить", ActiveAt: "2023-08-05", Status: "active"}},
 			httpStatus:      http.StatusOK,
 		},
 	}

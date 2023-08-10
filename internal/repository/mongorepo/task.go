@@ -2,8 +2,8 @@ package mongorepo
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"github.com/khussa1n/todo-list/internal/custom_error"
 	"github.com/khussa1n/todo-list/internal/entity"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -12,55 +12,34 @@ import (
 	"log"
 )
 
-func (m *MongoDB) CreateTask(ctx context.Context, t *entity.Tasks) (string, error) {
+func (m *MongoDB) CreateTask(ctx context.Context, t *entity.Tasks) (*entity.Tasks, error) {
 	existingTaskFilter := bson.M{
 		"title": t.Title,
 	}
 
 	existingTaskCount, err := m.taskCollection.CountDocuments(ctx, existingTaskFilter)
 	if err != nil {
-		return "", fmt.Errorf("failed to check task uniqueness: %v", err)
+		return nil, fmt.Errorf("failed to check task uniqueness: %v", err)
 	}
 
 	if existingTaskCount > 0 {
-		return "", errors.New("a task with the same title and activeAt already exists")
+		return nil, custom_error.ErrDuplicateTask
 	}
 
 	result, err := m.taskCollection.InsertOne(ctx, t)
 	if err != nil {
-		return "", fmt.Errorf("failed to create task: %v", err)
+		return nil, fmt.Errorf("failed to create task: %v", err)
 	}
 
-	oid, ok := result.InsertedID.(primitive.ObjectID)
-	if ok == false {
-		return "", errors.New("failed to convert objectid to hex")
-	}
+	t.ID = result.InsertedID.(primitive.ObjectID)
 
 	log.Printf("create task")
 
-	return oid.Hex(), nil
+	return t, nil
 }
 
-func (m *MongoDB) UpdateTask(ctx context.Context, t *entity.Tasks) error {
-	existingTaskFilter := bson.M{
-		"title": t.Title,
-	}
-
-	existingTaskCount, err := m.taskCollection.CountDocuments(ctx, existingTaskFilter)
-	if err != nil {
-		return fmt.Errorf("failed to check task uniqueness: %v", err)
-	}
-
-	if existingTaskCount > 0 {
-		return errors.New("a task with the same title and activeAt already exists")
-	}
-
-	objectID, err := primitive.ObjectIDFromHex(t.ID)
-	if err != nil {
-		return err
-	}
-
-	filter := bson.M{"_id": objectID}
+func (m *MongoDB) UpdateTask(ctx context.Context, t *entity.Tasks, id primitive.ObjectID) error {
+	filter := bson.M{"_id": id}
 
 	taskBytes, err := bson.Marshal(t)
 	if err != nil {
@@ -85,7 +64,7 @@ func (m *MongoDB) UpdateTask(ctx context.Context, t *entity.Tasks) error {
 	}
 
 	if result.MatchedCount == 0 {
-		return errors.New("task not found")
+		return custom_error.ErrTaskNotFound
 	}
 
 	log.Printf("update task")
@@ -93,16 +72,11 @@ func (m *MongoDB) UpdateTask(ctx context.Context, t *entity.Tasks) error {
 	return nil
 }
 
-func (m *MongoDB) UpdateTaskStatus(ctx context.Context, id string, status string) error {
-	objectID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return err
-	}
-
-	filter := bson.M{"_id": objectID}
+func (m *MongoDB) UpdateTaskStatus(ctx context.Context, id primitive.ObjectID, status string) error {
+	filter := bson.M{"_id": id}
 	update := bson.M{"$set": bson.M{"status": status}}
 
-	_, err = m.taskCollection.UpdateOne(ctx, filter, update)
+	_, err := m.taskCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return err
@@ -144,20 +118,15 @@ func (m *MongoDB) GetAllTasks(ctx context.Context, status string) ([]entity.Task
 	return tasks, nil
 }
 
-func (m *MongoDB) GetTaskByID(ctx context.Context, id string) (*entity.Tasks, error) {
-	objectID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return nil, err
-	}
-
-	filter := bson.M{"_id": objectID}
+func (m *MongoDB) GetTaskByID(ctx context.Context, id primitive.ObjectID) (*entity.Tasks, error) {
+	filter := bson.M{"_id": id}
 
 	var task entity.Tasks
 
-	err = m.taskCollection.FindOne(ctx, filter).Decode(&task)
+	err := m.taskCollection.FindOne(ctx, filter).Decode(&task)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, errors.New("task not found")
+			return nil, custom_error.ErrTaskNotFound
 		}
 		return nil, fmt.Errorf("failed to get task by ID: %v", err)
 	}
@@ -167,13 +136,8 @@ func (m *MongoDB) GetTaskByID(ctx context.Context, id string) (*entity.Tasks, er
 	return &task, nil
 }
 
-func (m *MongoDB) DeleteTask(ctx context.Context, id string) error {
-	objectID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return err
-	}
-
-	filter := bson.M{"_id": objectID}
+func (m *MongoDB) DeleteTask(ctx context.Context, id primitive.ObjectID) error {
+	filter := bson.M{"_id": id}
 
 	result, err := m.taskCollection.DeleteOne(ctx, filter)
 	if err != nil {
@@ -181,7 +145,7 @@ func (m *MongoDB) DeleteTask(ctx context.Context, id string) error {
 	}
 
 	if result.DeletedCount == 0 {
-		return errors.New("task not found")
+		return custom_error.ErrTaskNotFound
 	}
 
 	log.Printf("delete task")

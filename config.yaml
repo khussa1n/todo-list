@@ -13,3 +13,11 @@ db:
   password: 'mongo'
   collections:
     task: 'tasks'
+
+test:
+  db:
+    host: 'localhost'
+    port: '27018'
+    db_name: 'test'
+    collections:
+      task: 'tasks'

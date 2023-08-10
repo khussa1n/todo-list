@@ -2,23 +2,24 @@ package service
 
 import (
 	"context"
-	"errors"
+	"github.com/khussa1n/todo-list/internal/custom_error"
 	"github.com/khussa1n/todo-list/internal/entity"
 	"github.com/khussa1n/todo-list/internal/entity/dto"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"log"
 	"time"
 )
 
 func (m *Manager) CreateTask(ctx context.Context, t *dto.TasksDTO) (*entity.Tasks, error) {
 	if len(t.Title) > 200 {
-		return nil, errors.New("more than 200 char")
+		return nil, custom_error.ErrMessageTooLong
 	}
 
 	layout := "2006-01-02"
 	parsedDate, err := time.Parse(layout, t.ActiveAt)
 	if err != nil {
 		log.Println("activeAt format err: ", err)
-		return nil, errors.New("activeAt invalid format")
+		return nil, custom_error.ErrInvalidActiveAtFormat
 	}
 
 	weekday := parsedDate.Weekday()
@@ -32,36 +33,32 @@ func (m *Manager) CreateTask(ctx context.Context, t *dto.TasksDTO) (*entity.Task
 	}
 
 	task := &entity.Tasks{
-		ID:       "",
 		Title:    title,
 		ActiveAt: t.ActiveAt,
 		Status:   "active",
 	}
 
-	ID, err := m.Repository.CreateTask(ctx, task)
+	newTask, err := m.Repository.CreateTask(ctx, task)
 	if err != nil {
 		return nil, err
 	}
 
-	task.ID = ID
-
-	return task, nil
+	return newTask, nil
 }
 
-func (m *Manager) UpdateTask(ctx context.Context, t *dto.TasksDTO, id string) error {
+func (m *Manager) UpdateTask(ctx context.Context, t *dto.TasksDTO, id primitive.ObjectID) error {
 	task, err := m.Repository.GetTaskByID(ctx, id)
 	if err != nil {
 		return err
 	}
 
 	newTask := &entity.Tasks{
-		ID:       id,
 		Title:    t.Title,
 		ActiveAt: t.ActiveAt,
 		Status:   task.Status,
 	}
 
-	err = m.Repository.UpdateTask(ctx, newTask)
+	err = m.Repository.UpdateTask(ctx, newTask, id)
 	if err != nil {
 		return err
 	}
@@ -69,7 +66,7 @@ func (m *Manager) UpdateTask(ctx context.Context, t *dto.TasksDTO, id string) er
 	return nil
 }
 
-func (m *Manager) UpdateTaskStatus(ctx context.Context, id string, status string) error {
+func (m *Manager) UpdateTaskStatus(ctx context.Context, id primitive.ObjectID, status string) error {
 	err := m.Repository.UpdateTaskStatus(ctx, id, status)
 	if err != nil {
 		return err
@@ -93,7 +90,7 @@ func (m *Manager) GetAllTasks(ctx context.Context, status string) ([]entity.Task
 	return tasks, nil
 }
 
-func (m *Manager) DeleteTask(ctx context.Context, id string) error {
+func (m *Manager) DeleteTask(ctx context.Context, id primitive.ObjectID) error {
 	err := m.Repository.DeleteTask(ctx, id)
 	if err != nil {
 		return err

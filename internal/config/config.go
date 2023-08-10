@@ -8,6 +8,7 @@ import (
 type Config struct {
 	HTTP ServerConfig `yaml:"http"`
 	DB   DBConfig     `yaml:"db"`
+	Test TestConfig   `json:"test"`
 }
 
 type ServerConfig struct {
@@ -29,6 +30,10 @@ type DBConfig struct {
 	Username    string      `yaml:"username"`
 	Password    string      `yaml:"password"`
 	Collections Collections `yaml:"collections"`
+}
+
+type TestConfig struct {
+	DB DBConfig
 }
 
 func InitConfig(path string) (*Config, error) {

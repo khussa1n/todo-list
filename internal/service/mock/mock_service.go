@@ -11,6 +11,7 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	entity "github.com/khussa1n/todo-list/internal/entity"
 	dto "github.com/khussa1n/todo-list/internal/entity/dto"
+	primitive "go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // MockTodoList is a mock of TodoList interface.
@@ -52,7 +53,7 @@ func (mr *MockTodoListMockRecorder) CreateTask(ctx, t interface{}) *gomock.Call 
 }
 
 // DeleteTask mocks base method.
-func (m *MockTodoList) DeleteTask(ctx context.Context, id string) error {
+func (m *MockTodoList) DeleteTask(ctx context.Context, id primitive.ObjectID) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteTask", ctx, id)
 	ret0, _ := ret[0].(error)
@@ -81,7 +82,7 @@ func (mr *MockTodoListMockRecorder) GetAllTasks(ctx, status interface{}) *gomock
 }
 
 // UpdateTask mocks base method.
-func (m *MockTodoList) UpdateTask(ctx context.Context, t *dto.TasksDTO, id string) error {
+func (m *MockTodoList) UpdateTask(ctx context.Context, t *dto.TasksDTO, id primitive.ObjectID) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateTask", ctx, t, id)
 	ret0, _ := ret[0].(error)
@@ -95,7 +96,7 @@ func (mr *MockTodoListMockRecorder) UpdateTask(ctx, t, id interface{}) *gomock.C
 }
 
 // UpdateTaskStatus mocks base method.
-func (m *MockTodoList) UpdateTaskStatus(ctx context.Context, id, status string) error {
+func (m *MockTodoList) UpdateTaskStatus(ctx context.Context, id primitive.ObjectID, status string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateTaskStatus", ctx, id, status)
 	ret0, _ := ret[0].(error)
@@ -147,7 +148,7 @@ func (mr *MockServiceMockRecorder) CreateTask(ctx, t interface{}) *gomock.Call {
 }
 
 // DeleteTask mocks base method.
-func (m *MockService) DeleteTask(ctx context.Context, id string) error {
+func (m *MockService) DeleteTask(ctx context.Context, id primitive.ObjectID) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteTask", ctx, id)
 	ret0, _ := ret[0].(error)
@@ -176,7 +177,7 @@ func (mr *MockServiceMockRecorder) GetAllTasks(ctx, status interface{}) *gomock.
 }
 
 // UpdateTask mocks base method.
-func (m *MockService) UpdateTask(ctx context.Context, t *dto.TasksDTO, id string) error {
+func (m *MockService) UpdateTask(ctx context.Context, t *dto.TasksDTO, id primitive.ObjectID) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateTask", ctx, t, id)
 	ret0, _ := ret[0].(error)
@@ -190,7 +191,7 @@ func (mr *MockServiceMockRecorder) UpdateTask(ctx, t, id interface{}) *gomock.Ca
 }
 
 // UpdateTaskStatus mocks base method.
-func (m *MockService) UpdateTaskStatus(ctx context.Context, id, status string) error {
+func (m *MockService) UpdateTaskStatus(ctx context.Context, id primitive.ObjectID, status string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateTaskStatus", ctx, id, status)
 	ret0, _ := ret[0].(error)

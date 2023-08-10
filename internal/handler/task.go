@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/khussa1n/todo-list/internal/custom_error"
 	"github.com/khussa1n/todo-list/internal/entity/dto"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
@@ -24,30 +25,21 @@ func (h *Handler) createTask(ctx *gin.Context) {
 	err := ctx.ShouldBindJSON(&req)
 	if err != nil {
 		log.Printf("bind json err: %s \n", err.Error())
-		ctx.JSON(http.StatusBadRequest, &dto.Error{
-			Code:    -1,
-			Message: err.Error(),
-		})
+		ctx.JSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
 	task, err := h.srvs.CreateTask(ctx, &req)
 	if err != nil {
 		log.Printf("can not create task: %s \n", err.Error())
-		if err.Error() == "more than 200 char" || err.Error() == "activeAt invalid format" || err.Error() == "a task "+
-			"with the same title and activeAt already exists" || err.Error() == "the provided hex string is "+
-			"not a valid ObjectID" {
-			ctx.JSON(http.StatusBadRequest, &dto.Error{
-				Code:    -2,
-				Message: err.Error(),
-			})
+		switch err {
+		case custom_error.ErrMessageTooLong, custom_error.ErrInvalidActiveAtFormat, custom_error.ErrDuplicateTask:
+			ctx.JSON(http.StatusBadRequest, err.Error())
+			return
+		default:
+			ctx.JSON(http.StatusInternalServerError, err.Error())
 			return
 		}
-		ctx.JSON(http.StatusInternalServerError, &dto.Error{
-			Code:    -3,
-			Message: "invalid to create task",
-		})
-		return
 	}
 
 	ctx.JSON(http.StatusCreated, task)
@@ -64,35 +56,31 @@ func (h *Handler) createTask(ctx *gin.Context) {
 // @Failure      500  {object}  dto.Error
 // @Router       /tasks/{id} [put]
 func (h *Handler) updateTask(ctx *gin.Context) {
-	id := ctx.Param("id")
+	id, err := parseIdFromPath(ctx, "id")
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, "invalid id param")
+		return
+	}
 
 	var req dto.TasksDTO
-	err := ctx.ShouldBindJSON(&req)
+	err = ctx.ShouldBindJSON(&req)
 	if err != nil {
 		log.Printf("bind json err: %s \n", err.Error())
-		ctx.JSON(http.StatusBadRequest, &dto.Error{
-			Code:    -1,
-			Message: err.Error(),
-		})
+		ctx.JSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
 	err = h.srvs.UpdateTask(ctx, &req, id)
 	if err != nil {
 		log.Printf("can not update task: %s \n", err.Error())
-		if err.Error() == "task not found" || err.Error() == "a task with the same title and activeAt already exists"+
-			"" || err.Error() == "the provided hex string is not a valid ObjectID" {
-			ctx.JSON(http.StatusBadRequest, &dto.Error{
-				Code:    -2,
-				Message: err.Error(),
-			})
+		switch err {
+		case custom_error.ErrTaskNotFound, custom_error.ErrInvalidActiveAtFormat, custom_error.ErrDuplicateTask:
+			ctx.JSON(http.StatusBadRequest, err.Error())
+			return
+		default:
+			ctx.JSON(http.StatusInternalServerError, err.Error())
 			return
 		}
-		ctx.JSON(http.StatusInternalServerError, &dto.Error{
-			Code:    -3,
-			Message: "invalid update task",
-		})
-		return
 	}
 
 	ctx.JSON(http.StatusNoContent, "")
@@ -108,23 +96,23 @@ func (h *Handler) updateTask(ctx *gin.Context) {
 // @Failure      500  {object}  dto.Error
 // @Router       /tasks/{id}/done [put]
 func (h *Handler) updateTaskStatus(ctx *gin.Context) {
-	id := ctx.Param("id")
+	id, err := parseIdFromPath(ctx, "id")
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, "invalid id param")
+		return
+	}
 
-	err := h.srvs.UpdateTaskStatus(ctx, id, "done")
+	err = h.srvs.UpdateTaskStatus(ctx, id, "done")
 	if err != nil {
 		log.Printf("can not update status task: %s \n", err.Error())
-		if err == mongo.ErrNoDocuments || err.Error() == "the provided hex string is not a valid ObjectID" {
-			ctx.JSON(http.StatusBadRequest, &dto.Error{
-				Code:    -1,
-				Message: err.Error(),
-			})
+		switch err {
+		case mongo.ErrNoDocuments:
+			ctx.JSON(http.StatusBadRequest, err.Error())
+			return
+		default:
+			ctx.JSON(http.StatusInternalServerError, err.Error())
 			return
 		}
-		ctx.JSON(http.StatusInternalServerError, &dto.Error{
-			Code:    -2,
-			Message: "invalid update status task",
-		})
-		return
 	}
 
 	ctx.JSON(http.StatusNoContent, "")
@@ -140,23 +128,23 @@ func (h *Handler) updateTaskStatus(ctx *gin.Context) {
 // @Failure      500  {object}  dto.Error
 // @Router       /tasks/{id} [delete]
 func (h *Handler) deleteTask(ctx *gin.Context) {
-	id := ctx.Param("id")
+	id, err := parseIdFromPath(ctx, "id")
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, "invalid id param")
+		return
+	}
 
-	err := h.srvs.DeleteTask(ctx, id)
+	err = h.srvs.DeleteTask(ctx, id)
 	if err != nil {
 		log.Printf("can not delete task: %s \n", err.Error())
-		if err.Error() == "task not found" || err.Error() == "the provided hex string is not a valid ObjectID" {
-			ctx.JSON(http.StatusBadRequest, &dto.Error{
-				Code:    -1,
-				Message: err.Error(),
-			})
+		switch err {
+		case custom_error.ErrTaskNotFound:
+			ctx.JSON(http.StatusBadRequest, err.Error())
+			return
+		default:
+			ctx.JSON(http.StatusInternalServerError, err.Error())
 			return
 		}
-		ctx.JSON(http.StatusInternalServerError, &dto.Error{
-			Code:    -2,
-			Message: "invalid delete task",
-		})
-		return
 	}
 
 	ctx.JSON(http.StatusNoContent, "")
@@ -178,10 +166,7 @@ func (h *Handler) getAllTasks(ctx *gin.Context) {
 	tasks, err := h.srvs.GetAllTasks(ctx, status)
 	if err != nil {
 		log.Printf("can not get task: %s \n", err.Error())
-		ctx.JSON(http.StatusInternalServerError, &dto.Error{
-			Code:    -1,
-			Message: "invalid to get task",
-		})
+		ctx.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
 
