@@ -211,6 +211,11 @@ func Test_GetAllTasks(t *testing.T) {
 			status:       "active",
 			expectedRepo: []entity.Tasks{{ID: primitive.NewObjectID(), Title: "Купить", ActiveAt: "2023-08-05", Status: "active"}},
 		},
+		{
+			name:         "ok empty array",
+			status:       "active",
+			expectedRepo: make([]entity.Tasks, 0),
+		},
 	}
 
 	for _, testCase := range table {
@@ -225,14 +230,20 @@ func Test_GetAllTasks(t *testing.T) {
 
 			ctx := context.Background()
 
-			mockRepo.EXPECT().GetAllTasks(ctx, testCase.status).Return(testCase.expectedRepo, nil).Times(1)
-
 			service := New(mockRepo, cfg)
+
+			switch testCase.name {
+			case "ok":
+				mockRepo.EXPECT().GetAllTasks(ctx, testCase.status).Return(testCase.expectedRepo, nil).Times(1)
+				break
+			case "ok empty array":
+				mockRepo.EXPECT().GetAllTasks(ctx, testCase.status).Return(nil, nil).Times(1)
+				break
+			}
 
 			result, err := service.GetAllTasks(ctx, testCase.status)
 			require.NoError(t, err)
-			require.NotEmpty(t, result)
-			require.Equal(t, testCase.expectedRepo[0], result[0])
+			require.Equal(t, testCase.expectedRepo, result)
 		})
 	}
 }
