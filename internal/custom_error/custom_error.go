@@ -9,4 +9,5 @@ var (
 	ErrMessageTooLong        = errors.New("more than 200 char")
 	ErrInvalidActiveAtFormat = errors.New("activeAt invalid format")
 	ErrDuplicateTask         = errors.New("a task with the same title already exists")
+	ErrInvalidInputBody      = errors.New("invalid input body")
 )

@@ -50,6 +50,13 @@ func Test_createTask(t *testing.T) {
 			responseBody:    `"activeAt invalid format"`,
 		},
 		{
+			name:            "invalid input body",
+			dtoJson:         `{wrong}`,
+			expectedSrvcErr: custom_error.ErrInvalidInputBody,
+			httpStatus:      http.StatusBadRequest,
+			responseBody:    `"invalid input body"`,
+		},
+		{
 			name: "more than 200 char",
 			dto: dto.TasksDTO{Title: "Купитьasdfsasddddddddddddddddddddddddddddddddddddddddddddddddd" +
 				"ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd" +
@@ -78,6 +85,9 @@ func Test_createTask(t *testing.T) {
 			case "activeAt invalid format", "more than 200 char":
 				mockService.EXPECT().CreateTask(gomock.Any(), &testCase.dto).Return(nil, testCase.expectedSrvcErr).Times(1)
 				break
+			case "invalid input body":
+				mockService.EXPECT().CreateTask(gomock.Any(), &testCase.dto).Return(nil, testCase.expectedSrvcErr).Times(0)
+				break
 			}
 
 			var buf bytes.Buffer
@@ -85,8 +95,12 @@ func Test_createTask(t *testing.T) {
 			require.NoError(t, err)
 
 			url := fmt.Sprintf("/api/todo-list/tasks/")
-
-			request, err := http.NewRequest(http.MethodPost, url, &buf)
+			var request *http.Request
+			if &testCase.dto == nil {
+				request, err = http.NewRequest(http.MethodPost, url, bytes.NewBufferString(testCase.dtoJson))
+			} else {
+				request, err = http.NewRequest(http.MethodPost, url, &buf)
+			}
 			require.NoError(t, err)
 
 			handler.InitRouter().ServeHTTP(recorder, request)
@@ -100,6 +114,7 @@ func Test_createTask(t *testing.T) {
 func Test_updateTask(t *testing.T) {
 	table := []struct {
 		name            string
+		dtoJson         string
 		dto             dto.TasksDTO
 		id              primitive.ObjectID
 		idErr           string
@@ -141,6 +156,14 @@ func Test_updateTask(t *testing.T) {
 			responseBody:    `"invalid id param"`,
 		},
 		{
+			name:            "invalid input body",
+			id:              primitive.NewObjectID(),
+			dtoJson:         `{wrong}`,
+			expectedSrvcErr: custom_error.ErrInvalidInputBody,
+			httpStatus:      http.StatusBadRequest,
+			responseBody:    `"invalid input body"`,
+		},
+		{
 			name: "more than 200 char",
 			dto: dto.TasksDTO{Title: "Купитьasdfsasddddddddddddddddddddddddddddddddddddddddddddddddd" +
 				"ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd" +
@@ -174,7 +197,7 @@ func Test_updateTask(t *testing.T) {
 			case "activeAt invalid format", "more than 200 char":
 				mockService.EXPECT().UpdateTask(gomock.Any(), &testCase.dto, testCase.id).Return(testCase.expectedSrvcErr).Times(1)
 				break
-			case "empty id param", "invalid id param":
+			case "empty id param", "invalid id param", "invalid input body":
 				mockService.EXPECT().UpdateTask(gomock.Any(), &testCase.dto, testCase.idErr).Return(testCase.expectedSrvcErr).Times(0)
 				break
 			}
@@ -185,7 +208,13 @@ func Test_updateTask(t *testing.T) {
 			} else {
 				url = fmt.Sprintf("/api/todo-list/tasks/" + testCase.id.Hex())
 			}
-			request, err := http.NewRequest(http.MethodPut, url, &buf)
+
+			var request *http.Request
+			if testCase.dtoJson != "" {
+				request, err = http.NewRequest(http.MethodPut, url, bytes.NewBufferString(testCase.dtoJson))
+			} else {
+				request, err = http.NewRequest(http.MethodPut, url, &buf)
+			}
 			require.NoError(t, err)
 
 			handler.InitRouter().ServeHTTP(recorder, request)

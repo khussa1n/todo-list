@@ -25,7 +25,7 @@ func (h *Handler) createTask(ctx *gin.Context) {
 	err := ctx.ShouldBindJSON(&req)
 	if err != nil {
 		log.Printf("bind json err: %s \n", err.Error())
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, custom_error.ErrInvalidInputBody.Error())
 		return
 	}
 
@@ -66,7 +66,7 @@ func (h *Handler) updateTask(ctx *gin.Context) {
 	err = ctx.ShouldBindJSON(&req)
 	if err != nil {
 		log.Printf("bind json err: %s \n", err.Error())
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, custom_error.ErrInvalidInputBody.Error())
 		return
 	}
 
