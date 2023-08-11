@@ -11,6 +11,7 @@ import (
 	mock_service "github.com/khussa1n/todo-list/internal/service/mock"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -229,6 +230,14 @@ func Test_updateTaskStatus(t *testing.T) {
 			httpStatus:      http.StatusBadRequest,
 			responseBody:    `"invalid id param"`,
 		},
+		{
+			name:            mongo.ErrNoDocuments.Error(),
+			id:              primitive.NewObjectID(),
+			status:          "done",
+			expectedSrvcErr: custom_error.ErrTaskNotFound,
+			httpStatus:      http.StatusBadRequest,
+			responseBody:    fmt.Sprintf(`"%s"`, mongo.ErrNoDocuments.Error()),
+		},
 	}
 
 	for _, testCase := range table {
@@ -245,6 +254,9 @@ func Test_updateTaskStatus(t *testing.T) {
 			switch testCase.name {
 			case "ok":
 				mockService.EXPECT().UpdateTaskStatus(gomock.Any(), testCase.id, testCase.status).Return(nil).Times(1)
+				break
+			case mongo.ErrNoDocuments.Error():
+				mockService.EXPECT().UpdateTaskStatus(gomock.Any(), testCase.id, testCase.status).Return(mongo.ErrNoDocuments).Times(1)
 				break
 			case "empty id param", "invalid id param":
 				mockService.EXPECT().UpdateTaskStatus(gomock.Any(), testCase.id, testCase.status).Return(nil).Times(0)
@@ -270,11 +282,12 @@ func Test_updateTaskStatus(t *testing.T) {
 
 func Test_deleteTask(t *testing.T) {
 	table := []struct {
-		name         string
-		id           primitive.ObjectID
-		idErr        string
-		responseBody string
-		httpStatus   int
+		name            string
+		id              primitive.ObjectID
+		idErr           string
+		expectedSrvcErr error
+		responseBody    string
+		httpStatus      int
 	}{
 		{
 			name:       "ok",
@@ -295,6 +308,13 @@ func Test_deleteTask(t *testing.T) {
 			httpStatus:   http.StatusBadRequest,
 			responseBody: `"invalid id param"`,
 		},
+		{
+			name:            "task not found",
+			id:              primitive.NewObjectID(),
+			expectedSrvcErr: custom_error.ErrTaskNotFound,
+			httpStatus:      http.StatusBadRequest,
+			responseBody:    `"task not found"`,
+		},
 	}
 
 	for _, testCase := range table {
@@ -311,6 +331,9 @@ func Test_deleteTask(t *testing.T) {
 			switch testCase.name {
 			case "ok":
 				mockService.EXPECT().DeleteTask(gomock.Any(), testCase.id).Return(nil).Times(1)
+				break
+			case "task not found":
+				mockService.EXPECT().DeleteTask(gomock.Any(), testCase.id).Return(custom_error.ErrTaskNotFound).Times(1)
 				break
 			case "empty id param", "invalid id param":
 				mockService.EXPECT().DeleteTask(gomock.Any(), testCase.id).Return(nil).Times(0)
