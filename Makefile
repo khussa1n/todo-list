@@ -15,3 +15,7 @@ test.coverage:
 
 swag:
 	swag init cmd/main.go
+
+mock:
+	mockgen -source=internal/service/service.go -destination=internal/service/mock/mock_service.go
+	mockgen -source=internal/repository/repository.go -destination=internal/repository/mock/mock_repo.go
