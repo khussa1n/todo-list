@@ -39,45 +39,43 @@ func (m *MongoDB) CreateTask(ctx context.Context, t *entity.Tasks) (*entity.Task
 }
 
 func (m *MongoDB) UpdateTask(ctx context.Context, t *entity.Tasks, id primitive.ObjectID) error {
-	existingTaskFilter := bson.M{
-		"title": t.Title,
-	}
-
-	existingTaskCount, err := m.taskCollection.CountDocuments(ctx, existingTaskFilter)
-	if err != nil {
-		return fmt.Errorf("failed to check task uniqueness: %v", err)
-	}
-
-	if existingTaskCount > 0 {
-		return custom_error.ErrDuplicateTask
-	}
-
 	filter := bson.M{"_id": id}
 
-	taskBytes, err := bson.Marshal(t)
+	var task entity.Tasks
+
+	err := m.taskCollection.FindOne(ctx, filter).Decode(&task)
 	if err != nil {
-		return fmt.Errorf("failed to marshal task. error: %v", err)
+		if err == mongo.ErrNoDocuments {
+			return custom_error.ErrTaskNotFound
+		}
+		return fmt.Errorf("failed to get task by ID: %v", err)
 	}
 
-	var updateTaskObj bson.M
-	err = bson.Unmarshal(taskBytes, &updateTaskObj)
-	if err != nil {
-		return fmt.Errorf("failed to unmarshal task bytes. error: %v", err)
-	}
+	if t.Title != task.Title {
+		existingTaskFilter := bson.M{
+			"title": t.Title,
+		}
 
-	delete(updateTaskObj, "_id")
+		existingTaskCount, err := m.taskCollection.CountDocuments(ctx, existingTaskFilter)
+		if err != nil {
+			return fmt.Errorf("failed to check task uniqueness: %v", err)
+		}
+
+		if existingTaskCount > 0 {
+			return custom_error.ErrDuplicateTask
+		}
+	}
 
 	update := bson.M{
-		"$set": updateTaskObj,
+		"$set": bson.M{"title": t.Title, "activeAt": t.ActiveAt, "status": t.Status},
 	}
 
-	result, err := m.taskCollection.UpdateOne(ctx, filter, update)
+	_, err = m.taskCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return custom_error.ErrTaskNotFound
+		}
 		return fmt.Errorf("failed to update task. error: %v", err)
-	}
-
-	if result.MatchedCount == 0 {
-		return custom_error.ErrTaskNotFound
 	}
 
 	log.Printf("update task")
@@ -111,7 +109,9 @@ func (m *MongoDB) GetAllTasks(ctx context.Context, status string) ([]entity.Task
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve tasks. error: %v", err)
 	}
-	defer cursor.Close(ctx)
+	defer func() {
+		err = cursor.Close(ctx)
+	}()
 
 	for cursor.Next(ctx) {
 		var task entity.Tasks
@@ -128,7 +128,7 @@ func (m *MongoDB) GetAllTasks(ctx context.Context, status string) ([]entity.Task
 
 	log.Printf("get all tasks")
 
-	return tasks, nil
+	return tasks, err
 }
 
 func (m *MongoDB) GetTaskByID(ctx context.Context, id primitive.ObjectID) (*entity.Tasks, error) {
@@ -152,13 +152,12 @@ func (m *MongoDB) GetTaskByID(ctx context.Context, id primitive.ObjectID) (*enti
 func (m *MongoDB) DeleteTask(ctx context.Context, id primitive.ObjectID) error {
 	filter := bson.M{"_id": id}
 
-	result, err := m.taskCollection.DeleteOne(ctx, filter)
+	_, err := m.taskCollection.DeleteOne(ctx, filter)
 	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return custom_error.ErrTaskNotFound
+		}
 		return fmt.Errorf("failed to delete task. error: %v", err)
-	}
-
-	if result.DeletedCount == 0 {
-		return custom_error.ErrTaskNotFound
 	}
 
 	log.Printf("delete task")
